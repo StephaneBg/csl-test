@@ -23,8 +23,6 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Bundle
 import android.util.TypedValue
-import android.view.View
-import android.view.inputmethod.InputMethodManager
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
@@ -39,8 +37,9 @@ fun Context.dip(value: Int): Int = (value * resources.displayMetrics.density).to
 fun Context.dip(value: Float): Int = (value * resources.displayMetrics.density).toInt()
 
 fun Context.color(@ColorRes id: Int): Int = ContextCompat.getColor(this, id)
+
 @ColorInt
-fun Context.colorAttr(@AttrRes attribute: Int): Int = theme.color(attribute)
+fun Context.colorAttr(@AttrRes attribute: Int): Int = theme.color(this, attribute)
 
 fun Context.attr(@AttrRes attribute: Int): TypedValue = theme.attr(attribute)
 
@@ -51,12 +50,18 @@ inline val Context.configuration: Configuration
     get() = resources.configuration
 
 @ColorInt
-private fun Resources.Theme.color(@AttrRes attribute: Int): Int {
-    val attr = attr(attribute)
-    if (attr.type < TypedValue.TYPE_FIRST_COLOR_INT || attr.type > TypedValue.TYPE_LAST_COLOR_INT) {
-        throw IllegalArgumentException("Attribute value type is not color: $attribute")
+private fun Resources.Theme.color(context: Context, @AttrRes attribute: Int): Int {
+    val typedValue = attr(attribute)
+    return when {
+        typedValue.type == TypedValue.TYPE_STRING -> {
+            val csl = ContextCompat.getColorStateList(context, typedValue.resourceId)
+            csl?.defaultColor ?: error("Attribute $attribute doesn't exist")
+        }
+        typedValue.type < TypedValue.TYPE_FIRST_COLOR_INT || typedValue.type > TypedValue.TYPE_LAST_COLOR_INT -> {
+            typedValue.data
+        }
+        else -> error("Attribute value type is not color: $attribute")
     }
-    return attr.data
 }
 
 private fun Resources.Theme.attr(@AttrRes attribute: Int): TypedValue {
