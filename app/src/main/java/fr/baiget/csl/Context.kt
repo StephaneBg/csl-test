@@ -26,6 +26,7 @@ import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 
 
@@ -54,8 +55,7 @@ private fun Resources.Theme.color(context: Context, @AttrRes attribute: Int): In
     val typedValue = attr(attribute)
     return when {
         typedValue.type == TypedValue.TYPE_STRING -> {
-            val csl = ContextCompat.getColorStateList(context, typedValue.resourceId)
-            csl?.defaultColor ?: error("Attribute $attribute doesn't exist")
+            AppCompatResources.getColorStateList(context, typedValue.resourceId).defaultColor
         }
         typedValue.type < TypedValue.TYPE_FIRST_COLOR_INT || typedValue.type > TypedValue.TYPE_LAST_COLOR_INT -> {
             typedValue.data
